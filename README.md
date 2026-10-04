@@ -100,3 +100,7 @@ python verify-part.py
 ```
 
 For a custom install, pass `-p:GameDir="D:\SteamLibrary\steamapps\common\Sprocket"` when building, `-GameDir` to `verify-interop.ps1`, and `--game-dir` to `verify-part.py`. The pure tests run only during development, not in the game.
+
+## License
+
+[MIT](LICENSE), covering this mod's code and original assets. Sprocket and BepInEx are not included.
