@@ -2,7 +2,14 @@
 
 Standalone Hydropneumatic suspension with adjustable ride height and pitch, optional independent front/rear controls, readable settings, its own icon, premium cost/mass balance and editing-session memory for the running gear.
 
-Download **SprocketHydropneumatic-v0.4.0-beta.1.zip**, extract it and run `Install.ps1` with Sprocket closed. Requires **Sprocket 0.2.55.5 on Windows x64** and an existing **BepInEx 6 IL2CPP** installation. The ZIP includes the DLL, part definition, localization, icon and instructions; the loader is not included.
+**Recommended download: [SprocketHydropneumatic-v0.4.0-beta.1-manual.zip](https://github.com/RoanWassink/SprocketHydropneumatic/releases/download/v0.4.0-beta.1/SprocketHydropneumatic-v0.4.0-beta.1-manual.zip). No PowerShell needed.**
+
+1. Close Sprocket and extract the ZIP.
+2. In Steam: right-click Sprocket → Manage → Browse local files.
+3. Copy both `BepInEx` and `Sprocket_Data` from the ZIP into the folder containing `Sprocket.exe` in one paste. Merge folders and replace this mod's matching files if updating.
+4. Start Sprocket and select Hydropneumatic.
+
+Keep the folder structure intact; do not paste the ZIP's outer folder. The original ZIP without `-manual` remains available as an **optional PowerShell installer** with automatic backup and game-version checking. Both packages contain the same plugin/assets. Requires **Sprocket 0.2.55.5 on Windows x64** and an existing **BepInEx 6 IL2CPP** installation. The ZIP includes the DLL, part definition, localization, icon and instructions; the loader is not included.
 
 - Up/Down arrows: whole-tank height.
 - Page Up/Down: lean forward/backward.
