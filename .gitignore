@@ -1,0 +1,11 @@
+work/
+release/
+backups/
+bin/
+obj/
+*.dll
+*.pdb
+*.zip
+*.dmp
+*.log
+.vs/

@@ -1,0 +1,183 @@
+{
+  "v": "0.2",
+  "guid": "75f3d8e2-6c19-4b27-9f50-481c6a8d02b4",
+  "name": "hydropneumaticSuspension",
+  "order": 1,
+  "date": "0000.01.01",
+  "type": "suspension",
+  "tags": [
+    "suspension"
+  ],
+  "components": [
+    {
+      "fileID": "wheelMount",
+      "type": "wheelMount",
+      "info": {
+        "v": "0.0",
+        "mass": 25,
+        "assemblyLength": 0,
+        "maxWheelRadius": -1,
+        "beltWidthOffsetFraction": 0,
+        "forceRollers": false,
+        "modelFileID": "mountModel",
+        "suspensionFileID": "suspension",
+        "axleFileIDs": [
+          "axle"
+        ]
+      }
+    },
+    {
+      "fileID": "mountModel",
+      "type": "model",
+      "info": {
+        "v": "0.2",
+        "meshGuid": "6b244b472b30b2d409b8a794280b6ca3",
+        "materialGuids": [
+          "3e1695a0b14f1654299bc3df0b93d747"
+        ],
+        "scaling": false,
+        "flipping": false,
+        "selectable": false,
+        "placementSurface": false,
+        "damageable": false
+      }
+    },
+    {
+      "fileID": "suspension",
+      "type": "suspension",
+      "info": {
+        "v": "0.0",
+        "armFileIDs": [
+          "arm"
+        ]
+      }
+    },
+    {
+      "fileID": "hydroAccumulator",
+      "type": "voluteSpring",
+      "info": {
+        "v": "0.0",
+        "wireThickness": 34.6,
+        "wireWidth": 272,
+        "coilDiameter": 346,
+        "coilCount": 6,
+        "mass": 125
+      }
+    }
+  ],
+  "transform": {
+    "mirroring": false,
+    "duplication": false,
+    "pickup": false,
+    "snapToCentre": false,
+    "autoRotate": true,
+    "airPlacement": false,
+    "translation": false,
+    "rotation": false,
+    "scaling": false,
+    "dynamic": false,
+    "placementMode": "forwardFaceNormal",
+    "scale": [],
+    "maxScale": [],
+    "minScale": [],
+    "objects": [
+      {
+        "fileID": "armObject",
+        "parentFileID": null,
+        "localPosition": [],
+        "localRotation": [],
+        "localScale": [],
+        "components": [
+          {
+            "fileID": "arm",
+            "type": "suspensionArm",
+            "info": {
+              "v": "0.1",
+              "modelFileID": "armModel",
+              "springFileID": "hydroAccumulator",
+              "axleFileID": "axle",
+              "axleOffset": 187,
+              "armPreBendAngle": 0.0,
+              "modelArmLength": 656,
+              "lockArmScale": false,
+              "lockArmAngle": false,
+              "forwardFacing": true,
+              "lockFaceDirection": false,
+              "counterAngle": false,
+              "mass": 35
+            }
+          },
+          {
+            "fileID": "armModel",
+            "type": "model",
+            "info": {
+              "v": "0.2",
+              "meshGuid": "e492bd7e6a0124b40b0fdd62cecf738d",
+              "materialGuids": [
+                "3e1695a0b14f1654299bc3df0b93d747"
+              ],
+              "scaling": false,
+              "flipping": false,
+              "selectable": false,
+              "placementSurface": false,
+              "damageable": false
+            }
+          }
+        ]
+      },
+      {
+        "fileID": "axleObject",
+        "parentFileID": null,
+        "localPosition": [],
+        "localRotation": [],
+        "localScale": [],
+        "components": [
+          {
+            "fileID": "axle",
+            "type": "axle",
+            "info": {
+              "v": "0.0",
+              "rodFileID": "axleRod",
+              "wheelArrayFileID": "wheelArray"
+            }
+          },
+          {
+            "fileID": "axleRod",
+            "type": "axleRod",
+            "info": {
+              "v": "0.0",
+              "modelFileID": "axleModel",
+              "modelRadius": 100,
+              "modelLength": 1000
+            }
+          },
+          {
+            "fileID": "axleModel",
+            "type": "model",
+            "info": {
+              "v": "0.2",
+              "meshGuid": "58b2d1f5bafc461469d4e9429a2b1e69",
+              "materialGuids": [
+                "38c8229f8ae921e40936565b4fec4b4a"
+              ],
+              "scaling": false,
+              "flipping": false,
+              "selectable": false,
+              "placementSurface": false,
+              "damageable": false
+            }
+          },
+          {
+            "fileID": "wheelArray",
+            "type": "wheelArray",
+            "info": {
+              "v": "0.0",
+              "layoutMode": 0,
+              "offset": 0
+            }
+          }
+        ]
+      }
+    ]
+  }
+}
