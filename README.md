@@ -1,5 +1,7 @@
 # Sprocket Hydropneumatic
 
+**Required dependency: [Sprocket Keybinds API 0.1.5](https://github.com/RoanWassink/SprocketKeybinds/releases/tag/v0.1.5). Hydropneumatic, Telescopic Mast, Thermal Sight and Smoke Launchers will not load without it. The full pack includes it: keep its DLL installed. For separate plugin downloads, install the API ZIP once, merging its BepInEx folder into your game folder.**
+
 Raise, lower and pitch your tank while driving, with optional independent front/rear control.
 
 **v0.4.2 — beta.** Controls now appear in the shared Mod keybinds menu. Rebind them without editing keyboard settings in a CFG file. This build also retains the suspension geometry fixes when changing suspension parts.
