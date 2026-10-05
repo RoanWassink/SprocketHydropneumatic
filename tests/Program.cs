@@ -72,6 +72,30 @@ Check(hi>.35f && lo<2.7f,"Travel reserve preserved");
 Near(positive.AngleForHeight(0,.15f),1.4f,"Neutral retained with reserve");
 Check(!new SpringGeometry(.6f,0,-1,1).Valid,"Reject nonmonotonic crossed arm branch");
 Check(!new SpringGeometry(float.NaN,1,0.5f,2).Valid,"Reject invalid geometry");
+// Autosave reproduction: TargetAngle=-60 degrees puts neutral at +/-30
+// degrees. HPS's +/-35 degree stops cross zero; retain the useful branch.
+float lowArmReference = MathF.PI / 6, hydraulicTravel = 35 * MathF.PI / 180;
+var crossing = new SpringGeometry(.34f,lowArmReference,lowArmReference-hydraulicTravel,lowArmReference+hydraulicTravel);
+Check(!crossing.Valid,"Raw -60 degree arm crosses cosine turning point");
+var constrained = crossing.ConstrainToReferenceBranch();
+var reverseConstrained = new SpringGeometry(.34f,-lowArmReference,-lowArmReference-hydraulicTravel,-lowArmReference+hydraulicTravel).ConstrainToReferenceBranch();
+Check(constrained.Valid && reverseConstrained.Valid,"Both mirrored -60 degree arms have usable hydraulic branches");
+Check(constrained.MinAngle>=crossing.MinAngle && constrained.MaxAngle<=crossing.MaxAngle,"Hydraulic branch cannot extend native stops");
+Near(constrained.ReferenceAngle,lowArmReference,"Clipping does not change neutral geometry");
+Near(constrained.AngleForHeight(0,.03f),lowArmReference,"Clipped arm preserves neutral stance");
+var constrainedRange=constrained.HeightRange(.03f);
+Check(constrainedRange.Min<0 && constrainedRange.Max>0,"Clipped arm supports raising and lowering");
+for(int i=0;i<=100;i++)
+{
+    float h=constrainedRange.Min+(constrainedRange.Max-constrainedRange.Min)*i/100;
+    float a=constrained.AngleForHeight(h,.03f), b=reverseConstrained.AngleForHeight(h,.03f);
+    Near(a,-b,"Clipped mirrored symmetry");
+    Near(.34f*(MathF.Cos(a)-MathF.Cos(lowArmReference)),h,"Clipped requested height round trip");
+    Check(a>=crossing.MinAngle && a<=crossing.MaxAngle,"Clipped angle respects original native stops");
+}
+Check(positive.ConstrainToReferenceBranch()==positive,"Ordinary valid geometry unchanged");
+Check(!new SpringGeometry(.34f,0,-hydraulicTravel,hydraulicTravel).ConstrainToReferenceBranch().Valid,"Exactly ambiguous neutral remains unsupported");
+Check(!new SpringGeometry(.34f,1,2,3).ConstrainToReferenceBranch().Valid,"Branch cannot repair a neutral outside stops");
 var fit=HydroSpring.Fit(1.2f,positive,0,1.4f,settings);
 Near(fit.RestAngle,1.2f,"Baseline native preload");
 var stiff=settings.Copy(); stiff.Stiffness=2;

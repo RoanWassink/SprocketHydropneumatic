@@ -1,11 +1,7 @@
-work/
-release/
-backups/
 bin/
 obj/
+backups/
+work/
+outputs/
 *.dll
 *.pdb
-*.zip
-*.dmp
-*.log
-.vs/

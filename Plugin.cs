@@ -3,12 +3,15 @@ using BepInEx.Configuration;
 using BepInEx.Logging;
 using BepInEx.Unity.IL2CPP;
 using HarmonyLib;
+using SprocketKeybinds;
 
 namespace SprocketHydropneumatic;
 
-[BepInPlugin("nl.roan.sprocket.hydropneumatic", "Sprocket Hydropneumatic", "0.4.0")]
+[BepInPlugin("nl.roan.sprocket.hydropneumatic", "Sprocket Hydropneumatic", "0.4.2")]
+[BepInDependency(Keybinds.PluginGuid, ">=0.1.3 <0.2.0")]
 public sealed class Plugin : BasePlugin
 {
+    internal const string Guid = "nl.roan.sprocket.hydropneumatic";
     internal static ManualLogSource ModLog = null!;
     internal static ConfigEntry<bool> Enabled = null!;
     internal static ConfigEntry<bool> Diagnostics = null!;
@@ -26,7 +29,7 @@ public sealed class Plugin : BasePlugin
             core.CreateClassProcessor(typeof(BalanceHooks)).Patch();
             core.CreateClassProcessor(typeof(LayoutMemoryHooks)).Patch();
             core.CreateClassProcessor(typeof(RuntimeHooks)).Patch();
-            Log.LogInfo("[Hydro] Core ready. v0.4.0 beta 1; remembered HPS layout and two-sided hydraulic travel.");
+            Log.LogInfo("[Hydro] Core ready. v0.4.2 shared keybinds; hydraulic travel constrained to the neutral arm branch.");
         }
         catch (Exception ex)
         {

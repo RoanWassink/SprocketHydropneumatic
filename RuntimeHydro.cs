@@ -9,7 +9,6 @@ using Sprocket.Vehicles.Tracks;
 using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
-using UnityEngine.InputSystem;
 using NativeSpring = Sprocket.ContinuousTracks.SuspensionSpring;
 
 namespace SprocketHydropneumatic;
@@ -38,33 +37,19 @@ internal static class RuntimeHydro
     private static readonly Dictionary<int, HeightCommands> Commands = new();
     private static readonly HashSet<int> ActiveBodies = new();
     private static readonly HashSet<string> Warnings = new();
-    private static ConfigEntry<Key> frontUp = null!, frontDown = null!, rearUp = null!, rearDown = null!, reset = null!;
     private static int controlledBody;
     private static int inputFrame = -100, lastCaptureFrame = -1, frontInput, rearInput;
     private static bool resetInput;
 
-    internal static void Configure(ConfigFile config)
-    {
-        frontUp = config.Bind("Keys", "FrontUp", Key.UpArrow, "Raise tank; in independent mode raise front.");
-        frontDown = config.Bind("Keys", "FrontDown", Key.DownArrow, "Lower tank; in independent mode lower front.");
-        rearUp = config.Bind("Keys", "RearUp", Key.PageUp, "Lean forward; in independent mode raise rear.");
-        rearDown = config.Bind("Keys", "RearDown", Key.PageDown, "Lean backward; in independent mode lower rear.");
-        reset = config.Bind("Keys", "Neutral", Key.Home, "Return smoothly to the editor ride height.");
-    }
+    internal static void Configure(ConfigFile config) => HydroControls.Configure(config);
     internal static string[] ControlLabels(bool independent) => new[]
     {
-        (independent ? "Raise front: " : "Raise tank: ") + KeyLabel(frontUp.Value),
-        (independent ? "Lower front: " : "Lower tank: ") + KeyLabel(frontDown.Value),
-        (independent ? "Raise rear: " : "Lean forward: ") + KeyLabel(rearUp.Value),
-        (independent ? "Lower rear: " : "Lean backward: ") + KeyLabel(rearDown.Value),
-        "Return to normal height: " + KeyLabel(reset.Value)
-    };
-    private static string KeyLabel(Key key) => key switch
-    {
-        Key.UpArrow => "Up arrow", Key.DownArrow => "Down arrow",
-        Key.LeftArrow => "Left arrow", Key.RightArrow => "Right arrow",
-        Key.PageUp => "Page Up", Key.PageDown => "Page Down", Key.None => "Unassigned",
-        _ => key.ToString()
+        "Change bindings in Settings / keybinds (HPS labels)",
+        (independent ? "Raise front: " : "Raise tank: ") + HydroControls.Display(HydroControls.Raise),
+        (independent ? "Lower front: " : "Lower tank: ") + HydroControls.Display(HydroControls.Lower),
+        (independent ? "Raise rear (Tilt forward): " : "Lean forward: ") + HydroControls.Display(HydroControls.Forward),
+        (independent ? "Lower rear (Tilt back): " : "Lean backward: ") + HydroControls.Display(HydroControls.Backward),
+        "Return to normal height: " + HydroControls.Display(HydroControls.Neutral)
     };
 
     internal static void Warn(string area, Exception ex)
@@ -112,17 +97,22 @@ internal static class RuntimeHydro
             float reference = Math.Clamp(spring.restAngle, spring.minAngle, spring.maxAngle);
             if (transform != null && referenceAngles.TryGetValue(transform.Pointer, out float designAngle)) reference = designAngle;
             reference = Math.Clamp(reference, spring.minAngle, spring.maxAngle);
-            geometry[i] = new(spring.armLength, reference, spring.minAngle, spring.maxAngle);
+            geometry[i] = new SpringGeometry(spring.armLength, reference, spring.minAngle, spring.maxAngle).ConstrainToReferenceBranch();
             // Front is +Z in the VEHICLE frame; belt-local X may be reversed on one side.
             positions[i] = transform != null ? body.transform.InverseTransformPoint(transform.position).z : float.NaN;
             minZ = Math.Min(minZ, positions[i]); maxZ = Math.Max(maxZ, positions[i]);
         }
         if (!float.IsFinite(minZ) || !float.IsFinite(maxZ) || maxZ - minZ < .01f || geometry.Any(g => !g.Valid))
         {
-            Plugin.ModLog.LogWarning("[Hydro] Unsupported arm geometry or missing arm transforms; this track remains vanilla.");
+            int invalid = Array.FindIndex(geometry, g => !g.Valid);
+            string detail = invalid >= 0 ? $" spring={invalid} length={geometry[invalid].Length:F3} reference={geometry[invalid].ReferenceAngle:F3} commandStops={geometry[invalid].MinAngle:F3}..{geometry[invalid].MaxAngle:F3}" : "";
+            Plugin.ModLog.LogWarning($"[Hydro] Unsupported geometry: springs={springs.Length} transforms={transforms?.Length ?? 0} vehicleZ={minZ:F3}..{maxZ:F3}{detail}; this track remains vanilla.");
             return;
         }
         var fractions = positions.Select(z => (z - minZ) / (maxZ - minZ)).ToArray();
+        int limited = Enumerable.Range(0, geometry.Length).Count(i => geometry[i].MinAngle != original[i].minAngle || geometry[i].MaxAngle != original[i].maxAngle);
+        if (limited > 0)
+            Plugin.ModLog.LogInfo($"[Hydro] Hydraulic travel limited to neutral arm branch for {limited}/{geometry.Length} springs; native geometry and stops preserved.");
         Tracks[track.Pointer] = new(track, blueprint, body.GetInstanceID(), original, geometry, fractions);
         var settings = Profiles.Get(blueprint);
         settings.Enabled = true;
@@ -172,6 +162,7 @@ internal static class RuntimeHydro
 
     internal static void CaptureInput(VehicleController controller, GameTime time)
     {
+        HydroControls.TryMigrate();
         if (lastCaptureFrame == Time.frameCount) return;
         controlledBody = 0; frontInput = rearInput = 0; resetInput = false;
         if (!Plugin.Enabled.Value || !Application.isFocused || time.PauseState != PauseState.Unpaused || time.TimeScale <= 0 || time.DeltaTime <= 0) return;
@@ -179,16 +170,15 @@ internal static class RuntimeHydro
         if (selected != null && ((selected.GetComponent<TMP_InputField>()?.isFocused ?? false) ||
             (selected.GetComponent<UnityEngine.UI.InputField>()?.isFocused ?? false))) return;
         var vehicle = controller.ControlledVehicle?.TryCast<VehicleBehaviour>();
-        if (vehicle?.Rigidbody == null || Keyboard.current == null) return;
+        if (vehicle?.Rigidbody == null) return;
         int bodyId = vehicle.Rigidbody.GetInstanceID();
         if (!ActiveBodies.Contains(bodyId)) return;
         lastCaptureFrame = Time.frameCount;
         controlledBody = bodyId;
         inputFrame = Time.frameCount;
-        bool Held(Key key) => key != Key.None && Keyboard.current[key].isPressed;
-        frontInput = (Held(frontUp.Value) ? 1 : 0) - (Held(frontDown.Value) ? 1 : 0);
-        rearInput = (Held(rearUp.Value) ? 1 : 0) - (Held(rearDown.Value) ? 1 : 0);
-        resetInput = reset.Value != Key.None && Keyboard.current[reset.Value].wasPressedThisFrame;
+        frontInput = (HydroControls.Raise.IsHeld ? 1 : 0) - (HydroControls.Lower.IsHeld ? 1 : 0);
+        rearInput = (HydroControls.Forward.IsHeld ? 1 : 0) - (HydroControls.Backward.IsHeld ? 1 : 0);
+        resetInput = HydroControls.Neutral.WasPressedThisFrame;
     }
 
     // Called BEFORE the central movement register schedules any new physics work.

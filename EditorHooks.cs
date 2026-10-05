@@ -38,7 +38,7 @@ internal static class EditorHooks
                     var next = Profiles.Get(__instance.blueprint).Copy();
                     next.IndependentControls = enabled;
                     Apply(__instance, vehicle, next);
-                })), "Off: arrows adjust whole-tank height; Page Up/Down tilt. On: control front and rear separately.");
+                })), "Off: HPS Raise/Lower adjusts tank height; Tilt forward/back adjusts pitch. On: Raise/Lower controls the front; Tilt forward/back controls the rear. Bindings: Settings keybind menu, HPS labels.");
             ui.EndRow();
             foreach (var line in RuntimeHydro.ControlLabels(settings.IndependentControls))
             {

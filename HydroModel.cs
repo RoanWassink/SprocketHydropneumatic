@@ -104,6 +104,21 @@ public sealed class HeightCommands
 
 public readonly record struct SpringGeometry(float Length, float ReferenceAngle, float MinAngle, float MaxAngle)
 {
+    // Native stops may straddle a cosine turning point (e.g. a -60 degree
+    // design arm with +/-35 degree travel). Limit hydraulic commands to the
+    // monotonic side containing the neutral angle; don't change native stops
+    // or move the neutral stance to make an ambiguous geometry look valid.
+    public SpringGeometry ConstrainToReferenceBranch()
+    {
+        if (!float.IsFinite(ReferenceAngle) || !float.IsFinite(MinAngle) || !float.IsFinite(MaxAngle) ||
+            ReferenceAngle == 0 || ReferenceAngle <= -MathF.PI || ReferenceAngle >= MathF.PI)
+            return this;
+        const float margin = .0101f;
+        float lower = ReferenceAngle > 0 ? margin : -MathF.PI + margin;
+        float upper = ReferenceAngle > 0 ? MathF.PI - margin : -margin;
+        return this with { MinAngle = Math.Max(MinAngle, lower), MaxAngle = Math.Min(MaxAngle, upper) };
+    }
+
     public bool Valid => float.IsFinite(Length) && Length > .01f &&
         float.IsFinite(ReferenceAngle) && float.IsFinite(MinAngle) && float.IsFinite(MaxAngle) &&
         MinAngle < MaxAngle && ReferenceAngle >= MinAngle && ReferenceAngle <= MaxAngle &&
